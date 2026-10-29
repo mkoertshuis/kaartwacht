@@ -12,36 +12,63 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./" aria-label="Kaartwacht startpagina">
-      <span class="brand-mark" aria-hidden="true">K<span>♠</span></span>
-      <span>kaartwacht</span>
-    </a>
-    <div class="topbar-note"><span class="status-dot"></span> Elke slag telt</div>
+    <button type="button" class="icon-button" id="menu-toggle" aria-label="Open oefenmenu" title="Oefeningen en instellingen" aria-controls="settings-dialog" aria-haspopup="dialog" aria-expanded="false"><span class="hamburger" aria-hidden="true">☰</span></button>
+    <a class="brand" href="./" aria-label="Kaartwacht startpagina"><span class="brand-mark" aria-hidden="true">K<span>♠</span></span><span class="brand-name">kaartwacht</span></a>
+    <span id="current-mode" class="current-mode">Kleuren tellen</span>
+    <button type="button" class="icon-button" id="info-toggle" aria-label="Open opdracht en voortgang" title="Opdracht en voortgang" aria-controls="info-dialog" aria-haspopup="dialog" aria-expanded="false"><span class="info-icon" aria-hidden="true">i</span></button>
   </header>
 
   <main class="app-shell">
-    <section class="intro" aria-labelledby="page-title">
-      <div>
-        <p class="eyebrow">TRAININGSTAFEL <span>·</span> SLAGENSPEL · RIKKEN</p>
-        <h1 id="page-title">Hou het spel <em>in de gaten.</em></h1>
-        <p class="intro-copy">Volg de kleuren. Lees de spelers. Onthoud wat er valt.</p>
-      </div>
-      <div class="scoreboard" aria-label="Jouw voortgang">
-        <div><span class="score-number" id="score">0</span><span class="score-label">goed</span></div>
-        <span class="score-divider" aria-hidden="true"></span>
-        <div><span class="score-number" id="streak">0</span><span class="score-label">op rij</span></div>
+    <h1 id="page-title" class="sr-only">Kaartwacht — kaartentellen oefenen</h1>
+    <section class="training-layout" aria-label="Kaarttel-oefening">
+      <div class="table-panel">
+        <div class="table-heading">
+          <div>
+            <p class="section-kicker" id="round-label">TELOPDRACHT</p>
+            <h2 id="round-title">Onthoud wat er valt.</h2>
+          </div>
+        </div>
+        <div class="round-meta">
+          <span id="scenario"></span>
+        </div>
+        <div class="played-cards" id="played-cards" aria-label="Kaarten op tafel"></div>
+        <div class="learning-aid" id="learning-aid" aria-label="Tellijst als oefenhulp" hidden></div>
+        <div class="hand-area"><span class="hand-label">JOUW HAND <span aria-hidden="true">·</span> ♣ ♦ ♠ ♥</span><div id="hand" class="hand" aria-label="Jouw kaarten"></div></div>
+        <div class="sequence-note"><span class="sequence-line" aria-hidden="true"></span><span id="sequence-count">0 slagen</span><span class="sequence-line" aria-hidden="true"></span></div>
+
+        <section class="answer-area" id="answer-area" aria-labelledby="question-title" hidden>
+          <div class="answer-title"><span class="step-dot" aria-hidden="true">?</span><div><h3 id="question-title" tabindex="-1"></h3><p id="question-help"></p></div></div>
+          <div id="question-controls"></div>
+        </section>
+        <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+        <div class="history-review" id="history-review" aria-label="Terugblik op de slagen" hidden></div>
+        <section class="session-summary" id="summary" aria-label="Resultaat van je oefening" hidden>
+          <h3>Oefening afgerond</h3><div id="session-summary"></div>
+        </section>
+        <div class="table-footer">
+          <span class="keyboard-hint" id="keyboard-hint" role="status">Lees je opdracht en start het spel.</span>
+          <div class="footer-actions">
+            <button class="secondary-button" id="review-button" type="button" hidden>↶ Bekijk slag</button>
+            <button class="primary-button" id="check-button" type="button">▶ Start</button>
+            <button class="primary-button next-button" id="next-button" type="button" hidden>Verder →</button>
+          </div>
+        </div>
       </div>
     </section>
+  </main>
 
-    <nav class="mode-tabs" aria-label="Kies een oefening">
+  <dialog id="settings-dialog" class="drawer settings-dialog" aria-labelledby="settings-title">
+    <header class="drawer-header"><h2 id="settings-title">Jouw oefening</h2><button type="button" class="icon-button close-button" id="settings-close" aria-label="Sluit oefenmenu" title="Sluiten"><span aria-hidden="true">×</span></button></header>
+    <div class="drawer-content">
+      <p class="drawer-intro">Kies wat je wilt trainen.</p>
+<nav class="mode-tabs" aria-label="Kies een oefening">
       <button type="button" class="mode-tab is-active" data-mode="counts" aria-pressed="true"><span class="tab-index" aria-hidden="true">♣</span><span>Kleuren tellen</span></button>
       <button type="button" class="mode-tab" data-mode="cards" aria-pressed="false"><span class="tab-index" aria-hidden="true">A♠</span><span>Kaarten onthouden</span></button>
       <button type="button" class="mode-tab" data-mode="players" aria-pressed="false"><span class="tab-index" aria-hidden="true">⊘</span><span>Spelers volgen</span></button>
       <button type="button" class="mode-tab" data-mode="rebuild" aria-pressed="false"><span class="tab-index" aria-hidden="true">↶</span><span>Slag terugbouwen</span></button>
       <button type="button" class="mode-tab" data-mode="table" aria-pressed="false"><span class="tab-index" aria-hidden="true">✳</span><span>Aan tafel</span></button>
     </nav>
-
-    <section class="practice-settings" aria-label="Stel je oefening in">
+<section class="practice-settings" aria-label="Stel je oefening in">
       <div class="settings-main">
         <label class="setting-field" for="difficulty">Lengte
           <select id="difficulty">
@@ -85,57 +112,27 @@
       </details>
       <p class="settings-note">Een instelling wijzigen start een nieuwe hand. Bij twee kleuren vervangt een nieuwe kleur je oudste keuze.</p>
     </section>
+    </div>
+  </dialog>
 
-    <section class="training-layout" aria-label="Kaarttel-oefening">
-      <div class="table-panel">
-        <div class="table-heading">
-          <div>
-            <p class="section-kicker" id="round-label">TELOPDRACHT</p>
-            <h2 id="round-title">Onthoud wat er valt.</h2>
-          </div>
-        </div>
-        <div class="round-meta">
-          <span id="scenario"></span>
-          <span class="live-tag"><span aria-hidden="true"></span> TRAINING</span>
-        </div>
-        <div class="played-cards" id="played-cards" aria-label="Kaarten op tafel"></div>
-        <div class="learning-aid" id="learning-aid" aria-label="Tellijst als oefenhulp" hidden></div>
-        <div class="hand-area"><span class="hand-label">JOUW HAND <span aria-hidden="true">·</span> ♣ ♦ ♠ ♥</span><div id="hand" class="hand" aria-label="Jouw kaarten"></div></div>
-        <div class="sequence-note"><span class="sequence-line" aria-hidden="true"></span><span id="sequence-count">0 slagen</span><span class="sequence-line" aria-hidden="true"></span></div>
-
-        <section class="answer-area" id="answer-area" aria-labelledby="question-title" hidden>
-          <div class="answer-title"><span class="step-dot" aria-hidden="true">?</span><div><h3 id="question-title" tabindex="-1"></h3><p id="question-help"></p></div></div>
-          <div id="question-controls"></div>
-        </section>
-        <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
-        <div class="history-review" id="history-review" aria-label="Terugblik op de slagen" hidden></div>
-        <section class="session-summary" id="summary" aria-label="Resultaat van je oefening" hidden>
-          <h3>Oefening afgerond</h3><div id="session-summary"></div>
-        </section>
-        <div class="table-footer">
-          <span class="keyboard-hint" id="keyboard-hint" role="status">Lees je opdracht en start het spel.</span>
-          <div class="footer-actions">
-            <button class="secondary-button" id="review-button" type="button" hidden>↶ Bekijk slag</button>
-            <button class="primary-button" id="check-button" type="button">▶ Start</button>
-            <button class="primary-button next-button" id="next-button" type="button" hidden>Verder →</button>
-          </div>
-        </div>
-      </div>
-
-      <aside class="side-panel">
+  <dialog id="info-dialog" class="drawer info-dialog" aria-labelledby="info-title">
+    <header class="drawer-header"><h2 id="info-title">Opdracht &amp; voortgang</h2><button type="button" class="icon-button close-button" id="info-close" aria-label="Sluit informatie" title="Sluiten"><span aria-hidden="true">×</span></button></header>
+<aside class="side-panel">
         <div class="aside-heading"><span class="aside-icon" aria-hidden="true">✳</span><span>JOUW OPDRACHT</span></div>
         <h2 id="focus-title">Kleuren tellen</h2>
         <p id="focus-copy">Onthoud hoeveel kaarten van jouw kleuren al gespeeld zijn. Tussen de slagen door krijg je vragen.</p>
         <div class="focus-divider"></div>
+        <div class="scoreboard" aria-label="Jouw voortgang">
+        <div><span class="score-number" id="score">0</span><span class="score-label">goed</span></div>
+        <span class="score-divider" aria-hidden="true"></span>
+        <div><span class="score-number" id="streak">0</span><span class="score-label">op rij</span></div>
+      </div>
         <div class="progress-heading"><span>Je beste reeks</span><span id="best-score">0</span></div>
         <div class="progress-track"><span id="progress-fill"></span></div>
         <p class="progress-caption" id="progress-caption">Elke goede telling houdt je reeks in stand.</p>
         <div class="skill-progress" id="skill-progress" aria-label="Voortgang per vaardigheid"></div>
         <div class="aside-tip"><span aria-hidden="true">♧</span><p>Kleur bekennen is verplicht. Hoogste kaart wint; troef gaat boven de uitgekomen kleur. De winnaar komt uit.</p></div>
       </aside>
-    </section>
-
-    <footer class="page-footer"><span>KAARTWACHT <span>·</span> ELKE SLAG TELT</span><span>Voortgang blijft op dit apparaat bewaard</span></footer>
-  </main>
+  </dialog>
 </body>
 </html>

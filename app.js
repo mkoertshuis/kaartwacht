@@ -34,6 +34,44 @@ const cardMarkup = card => `<span class="rank">${card.rank}</span><span class="s
 const cardLabel = card => `${card.rank}${SUITS[card.suit]}`;
 const showCard = (card, extra = '') => `<span class="playing-card ${color(card)} ${extra}" aria-label="${cardLabel(card)}">${cardMarkup(card)}</span>`;
 const skillFor = kind => ({ count: 'counts', recognize: 'cards', cards: 'cards', voids: 'players', canFollow: 'apply', highest: 'apply', rebuild: 'rebuild' })[kind];
+const panels = [
+  { dialog: 'settings-dialog', toggle: 'menu-toggle', close: 'settings-close' },
+  { dialog: 'info-dialog', toggle: 'info-toggle', close: 'info-close' },
+];
+const panelOpen = () => panels.some(panel => $(panel.dialog).open);
+
+function syncPanels() {
+  panels.forEach(panel => $(panel.toggle).setAttribute('aria-expanded', String($(panel.dialog).open)));
+  document.body.classList.toggle('panel-open', panelOpen());
+}
+function openPanel(panel) {
+  clearTimeout(timer);
+  panels.forEach(other => { if ($(other.dialog).open) $(other.dialog).close(); });
+  $(panel.dialog).showModal();
+  syncPanels();
+}
+function setupPanels() {
+  panels.forEach(panel => {
+    const dialog = $(panel.dialog);
+    $(panel.toggle).addEventListener('click', () => openPanel(panel));
+    $(panel.close).addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      syncPanels();
+      // Native dialogs return focus to the opener and keep the game inert while open.
+      if (!panelOpen()) { $(panel.toggle).focus({ preventScroll: true }); scheduleBot(); }
+    });
+    let startedOnBackdrop = false;
+    const outside = event => {
+      const bounds = dialog.getBoundingClientRect();
+      return event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom;
+    };
+    dialog.addEventListener('pointerdown', event => { startedOnBackdrop = event.target === dialog && outside(event); });
+    dialog.addEventListener('click', event => {
+      if (startedOnBackdrop && event.target === dialog && outside(event)) dialog.close();
+      startedOnBackdrop = false;
+    });
+  });
+}
 
 function saveProgress() {
   try { localStorage.setItem('kaartwacht-progress', JSON.stringify(progress)); } catch { /* Oefenen werkt ook zonder opslag. */ }
@@ -77,7 +115,12 @@ function createRound() {
 }
 function renderTable() {
   if (game.phase === 'brief') {
-    $('played-cards').innerHTML = `<div class="empty-table-message"><span aria-hidden="true">${game.tracked.map(suit => SUITS[suit]).join(' ')}</span><p>${MODE_COPY[game.mode]}</p><small>${game.target} slagen · tussendoor vragen · jouw hand blijft zichtbaar</small></div>`;
+    const task = {
+      counts: 'Onthoud hoeveel kaarten er vallen.', cards: 'Onthoud welke kaarten er vallen.',
+      players: 'Let op wie geen kleur meer heeft.', rebuild: 'Onthoud wie welke kaart speelt.',
+      table: 'Volg de kaarten én de spelers.',
+    }[game.mode];
+    $('played-cards').innerHTML = `<div class="empty-table-message"><span aria-hidden="true">${game.tracked.map(suit => SUITS[suit]).join(' ')}</span><p>${task}</p><small>${game.target} slagen · tussendoor vragen</small></div>`;
     return;
   }
   if (['question', 'feedback'].includes(game.phase)) {
@@ -107,6 +150,8 @@ function renderAid() {
   $('learning-aid').innerHTML = `<span>Tijdelijke telhulp · ${game.scope === 'others' ? 'bij de anderen' : 'nog niet gespeeld'} · verdwijnt na ${Math.ceil(game.target / 2)} slagen</span><div>${game.tracked.map(suit => `${suitMarkup(suit)} ${Trainer.remainingCards(visibleHistory, suit, game.hands[0], game.scope).length}`).join(' · ')}</div><small>${[1, 2, 3].map(player => `${SEATS[player]}: ${game.tracked.filter(suit => proof[player][suit] !== null).map(suit => `×${SUITS[suit]}`).join(' ') || '?'}`).join(' · ')}</small>`;
 }
 function render() {
+  $('played-cards').closest('.table-panel').dataset.phase = game.phase;
+  $('current-mode').textContent = game.mode === 'table' ? 'Aan tafel' : SKILLS[game.mode];
   renderTable(); renderHand(); renderAid();
   $('scenario').innerHTML = `Troef ${suitMarkup(game.trump)} <span>· Volg ${game.tracked.map(suitMarkup).join(' ')} </span>`;
   $('sequence-count').textContent = `${game.history.length} / ${game.target} slagen · ${game.results.length} vragen`;
@@ -157,11 +202,11 @@ function playCard(player, card) {
 }
 function scheduleBot() {
   clearTimeout(timer);
-  if (game.phase !== 'play' || game.turn === 0) return;
+  if (game.phase !== 'play' || game.turn === 0 || panelOpen()) return;
   const current = game;
   const player = game.turn;
   timer = setTimeout(() => {
-    if (game !== current || game.phase !== 'play' || game.turn !== player) return;
+    if (game !== current || game.phase !== 'play' || game.turn !== player || panelOpen()) return;
     playCard(player, pick(legalCards(game.hands[player], game.trick)));
   }, { slow: 1300, normal: 800, fast: 350 }[game.pace]);
 }
@@ -322,4 +367,4 @@ document.querySelectorAll('.mode-tab').forEach(tab => tab.addEventListener('clic
   document.querySelectorAll('.mode-tab').forEach(button => { button.classList.toggle('is-active', button === tab); button.setAttribute('aria-pressed', String(button === tab)); });
   createRound();
 }));
-saveProgress(); createRound();
+setupPanels(); saveProgress(); createRound();
