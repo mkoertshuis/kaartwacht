@@ -1,6 +1,6 @@
 /* De interface bewaart de beurt; Trainer rekent met de zichtbare spelinformatie. */
 'use strict';
-const { SUITS, RANKS, HAND_SUIT_ORDER, cardKey, legalCards, winner } = Trainer;
+const { SUITS, RANKS, HAND_SUIT_ORDER, cardKey, legalCards, winner, sortHand } = Trainer;
 const LEVELS = { easy: 3, medium: 5, advanced: 8, expert: 10, hard: 13 };
 const SEATS = ['Jij', 'Links', 'Overkant', 'Rechts'];
 const SKILLS = { counts: 'Kleuren tellen', cards: 'Kaarten bijhouden', players: 'Spelers volgen', rebuild: 'Slag terugbouwen', apply: 'Informatie toepassen' };
@@ -16,6 +16,15 @@ const readSaved = () => {
   try { const value = JSON.parse(localStorage.getItem('kaartwacht-progress') || '{}'); return value && typeof value === 'object' ? value : {}; } catch { return {}; }
 };
 const saved = readSaved();
+function readHandOrder() {
+  let stored;
+  try { stored = JSON.parse(localStorage.getItem('kaartwacht-hand-order') || '{}'); } catch { stored = {}; }
+  const suits = stored?.suits;
+  const validSuits = Array.isArray(suits) && suits.length === 4 && new Set(suits).size === 4
+    && suits.every(suit => Number.isInteger(suit) && suit >= 0 && suit < SUITS.length);
+  return { suits: validSuits ? [...suits] : [...HAND_SUIT_ORDER], direction: stored?.direction === 'asc' ? 'asc' : 'desc' };
+}
+let handOrder = readHandOrder();
 const positiveInteger = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
 const progress = {
   score: positiveInteger(saved.score), streak: positiveInteger(saved.streak), best: positiveInteger(saved.best),
@@ -92,6 +101,21 @@ function settings() {
     scope: $('count-scope').value, help: $('help-toggle').checked, pace: $('pace').value,
   };
 }
+function renderHandOrderSettings() {
+  document.querySelectorAll('[data-hand-suit]').forEach(select => {
+    const suit = handOrder.suits[Number(select.dataset.handSuit)];
+    select.innerHTML = HAND_SUIT_ORDER.map(option => `<option value="${option}" ${option === suit ? 'selected' : ''}>${SUITS[option]}</option>`).join('');
+    select.classList.toggle('red-suit', color({ suit }) === 'red-suit');
+    select.classList.toggle('black-suit', color({ suit }) === 'black-suit');
+  });
+  $('hand-rank-order').value = handOrder.direction;
+}
+function applyHandOrder() {
+  game.hands[0] = sortHand(game.hands[0], handOrder.suits, handOrder.direction);
+  try { localStorage.setItem('kaartwacht-hand-order', JSON.stringify(handOrder)); } catch { /* De voorkeur werkt ook zonder opslag. */ }
+  renderHandOrderSettings();
+  renderHand();
+}
 function renderSettings() {
   const count = Number($('tracked-count').value);
   tracked = tracked.filter(suit => HAND_SUIT_ORDER.includes(suit)).slice(0, count);
@@ -99,6 +123,7 @@ function renderSettings() {
   $('focus-suits').innerHTML = HAND_SUIT_ORDER.map(suit => `<button type="button" class="suit-toggle ${color({ suit })} ${tracked.includes(suit) ? 'is-selected' : ''}" data-focus="${suit}" aria-label="Volg ${SUITS[suit]}" aria-pressed="${tracked.includes(suit)}" ${count === 4 ? 'disabled' : ''}>${SUITS[suit]}</button>`).join('');
   $('card-settings').hidden = !['cards', 'table'].includes(mode);
   $('scope-settings').hidden = !['counts', 'cards', 'table'].includes(mode);
+  renderHandOrderSettings();
 }
 function createRound() {
   clearTimeout(timer);
@@ -109,6 +134,7 @@ function createRound() {
     nextQuestionAt: Math.min(settings().target - 1, pick([2, 3])),
     previousSuit: null, retry: null, results: [], showReview: false,
   };
+  game.hands[0] = sortHand(game.hands[0], handOrder.suits, handOrder.direction);
   $('focus-title').textContent = mode === 'table' ? 'Aan tafel' : SKILLS[mode];
   $('focus-copy').innerHTML = `${MODE_COPY[mode]}<br><br>Volg ${tracked.map(suitMarkup).join(' ')} · ${game.target} slagen.${game.help ? '<br>De tijdelijke telhulp verdwijnt halverwege en tijdens alle vragen.' : ''}`;
   render();
@@ -138,6 +164,8 @@ function renderTable() {
   }).join('');
 }
 function renderHand() {
+  $('hand-order-label').textContent = `${handOrder.suits.map(suit => SUITS[suit]).join(' ')} ${handOrder.direction === 'asc' ? '↑' : '↓'}`;
+  $('hand-order-label').title = handOrder.direction === 'asc' ? 'Laag naar hoog' : 'Hoog naar laag';
   const legal = legalCards(game.hands[0], game.trick);
   $('hand').innerHTML = game.hands[0].map((card, index) => `<button type="button" class="playing-card hand-card ${color(card)}" data-card="${index}" aria-label="Speel ${cardLabel(card)}" ${game.phase !== 'play' || game.turn !== 0 || !legal.includes(card) ? 'disabled' : ''}>${cardMarkup(card)}</button>`).join('') || '<span class="hand-label">Alle kaarten gespeeld</span>';
 }
@@ -359,6 +387,20 @@ $('focus-suits').addEventListener('click', event => {
   if (!button || button.disabled) return;
   const suit = Number(button.dataset.focus);
   if (!tracked.includes(suit)) { tracked = [...tracked.slice(1), suit]; createRound(); }
+});
+$('hand-suit-order').addEventListener('change', event => {
+  const select = event.target.closest('[data-hand-suit]');
+  if (!select) return;
+  const position = Number(select.dataset.handSuit);
+  const suit = Number(select.value);
+  const previousPosition = handOrder.suits.indexOf(suit);
+  if (previousPosition === -1) return;
+  [handOrder.suits[position], handOrder.suits[previousPosition]] = [handOrder.suits[previousPosition], handOrder.suits[position]];
+  applyHandOrder();
+});
+$('hand-rank-order').addEventListener('change', () => {
+  handOrder.direction = $('hand-rank-order').value === 'asc' ? 'asc' : 'desc';
+  applyHandOrder();
 });
 for (const id of ['difficulty', 'tracked-count', 'card-style', 'rank-range', 'count-scope', 'help-toggle', 'pace']) $(id).addEventListener('change', createRound);
 document.querySelectorAll('.mode-tab').forEach(tab => tab.addEventListener('click', () => {

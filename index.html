@@ -33,7 +33,7 @@
         </div>
         <div class="played-cards" id="played-cards" aria-label="Kaarten op tafel"></div>
         <div class="learning-aid" id="learning-aid" aria-label="Tellijst als oefenhulp" hidden></div>
-        <div class="hand-area"><span class="hand-label">JOUW HAND <span aria-hidden="true">·</span> ♣ ♦ ♠ ♥</span><div id="hand" class="hand" aria-label="Jouw kaarten"></div></div>
+        <div class="hand-area"><span class="hand-label">JOUW HAND <span aria-hidden="true">·</span> <span id="hand-order-label">♣ ♦ ♠ ♥ ↓</span></span><div id="hand" class="hand" aria-label="Jouw kaarten"></div></div>
         <div class="sequence-note"><span class="sequence-line" aria-hidden="true"></span><span id="sequence-count">0 slagen</span><span class="sequence-line" aria-hidden="true"></span></div>
 
         <section class="answer-area" id="answer-area" aria-labelledby="question-title" hidden>
@@ -110,7 +110,21 @@
           <label class="help-setting" for="help-toggle"><input type="checkbox" id="help-toggle"><span>Tellijst als hulp<small>Verdwijnt tijdens de vragen</small></span></label>
         </div>
       </details>
-      <p class="settings-note">Een instelling wijzigen start een nieuwe hand. Bij twee kleuren vervangt een nieuwe kleur je oudste keuze.</p>
+      <p class="settings-note">Oefeninstellingen wijzigen start een nieuwe hand. Bij twee kleuren vervangt een nieuwe kleur je oudste keuze.</p>
+      <fieldset class="hand-order-settings">
+        <legend>Kaartvolgorde</legend>
+        <p class="settings-note" id="hand-suit-help">Kleuren van links naar rechts. Kies je een andere kleur, dan wisselen ze van plek.</p>
+        <div class="hand-suit-order" id="hand-suit-order" role="group" aria-label="Kleurvolgorde in je hand" aria-describedby="hand-suit-help">
+          <label class="setting-field" for="hand-suit-0">1<select id="hand-suit-0" data-hand-suit="0" aria-label="Eerste kleur in je hand"></select></label>
+          <label class="setting-field" for="hand-suit-1">2<select id="hand-suit-1" data-hand-suit="1" aria-label="Tweede kleur in je hand"></select></label>
+          <label class="setting-field" for="hand-suit-2">3<select id="hand-suit-2" data-hand-suit="2" aria-label="Derde kleur in je hand"></select></label>
+          <label class="setting-field" for="hand-suit-3">4<select id="hand-suit-3" data-hand-suit="3" aria-label="Vierde kleur in je hand"></select></label>
+        </div>
+        <label class="setting-field" for="hand-rank-order">Binnen elke kleur
+          <select id="hand-rank-order"><option value="desc">Hoog → laag (A–2)</option><option value="asc">Laag → hoog (2–A)</option></select>
+        </label>
+        <p class="settings-note">Je hand wordt direct opnieuw gesorteerd. Je speelt dezelfde hand verder; je voorkeur wordt op dit apparaat bewaard.</p>
+      </fieldset>
     </section>
     </div>
   </dialog>

@@ -18,10 +18,17 @@ const Trainer = (() => {
     return result;
   }
 
+  function sortHand(cards, suitOrder = HAND_SUIT_ORDER, direction = 'desc') {
+    const order = Array.isArray(suitOrder) && suitOrder.length === 4 && HAND_SUIT_ORDER.every(suit => suitOrder.includes(suit))
+      ? suitOrder : HAND_SUIT_ORDER;
+    const rankDirection = direction === 'asc' ? 1 : -1;
+    return [...cards].sort((first, second) => order.indexOf(first.suit) - order.indexOf(second.suit) || rankDirection * (rankValue(first) - rankValue(second)));
+  }
+
   function deal() {
     const deck = shuffle(SUITS.flatMap((_, suit) => RANKS.map(rank => ({ rank, suit }))));
     const hands = [0, 1, 2, 3].map(player => deck.slice(player * 13, player * 13 + 13));
-    hands[0].sort((first, second) => HAND_SUIT_ORDER.indexOf(first.suit) - HAND_SUIT_ORDER.indexOf(second.suit) || rankValue(second) - rankValue(first));
+    hands[0] = sortHand(hands[0]);
     return hands;
   }
 
@@ -162,7 +169,7 @@ const Trainer = (() => {
     return false;
   }
 
-  return { SUITS, RANKS, HAND_SUIT_ORDER, shuffle, deal, cardKey, legalCards, winner, remainingCards, knownVoids, createQuestion, evaluateQuestion };
+  return { SUITS, RANKS, HAND_SUIT_ORDER, shuffle, sortHand, deal, cardKey, legalCards, winner, remainingCards, knownVoids, createQuestion, evaluateQuestion };
 })();
 
 globalThis.Trainer = Trainer;

@@ -14,6 +14,45 @@ test('dealing makes four unique 13-card hands and sorts own hand ♣ ♦ ♠ ♥
   assert.deepEqual(ordered, [...ordered].sort((a, b) => a - b));
 });
 
+test('hand sorting supports all 24 color orders in both rank directions without changing cards or inputs', () => {
+  const permutations = items => items.length ? items.flatMap((item, index) => permutations(items.filter((_, other) => other !== index)).map(rest => [item, ...rest])) : [[]];
+  const ascending = ['2', '10', 'J', 'Q', 'K', 'A'];
+  const ranks = ['J', '2', 'A', '10', 'K', 'Q'];
+  const hand = Object.freeze([0, 1, 2, 3].flatMap(suit => ranks.map(rank => Object.freeze(card(rank, suit)))));
+  const originalKeys = hand.map(T.cardKey);
+  const orders = permutations([0, 1, 2, 3]);
+  assert.equal(orders.length, 24);
+  for (const suitOrder of orders) {
+    Object.freeze(suitOrder);
+    for (const direction of ['asc', 'desc']) {
+      const expectedRanks = direction === 'asc' ? ascending : [...ascending].reverse();
+      const expected = suitOrder.flatMap(suit => expectedRanks.map(rank => `${suit}-${rank}`));
+      const sorted = T.sortHand(hand, suitOrder, direction);
+      assert.deepEqual(sorted.map(T.cardKey), expected);
+      assert.notEqual(sorted, hand);
+      assert(sorted.every(c => hand.includes(c)));
+      assert.deepEqual(hand.map(T.cardKey), originalKeys);
+    }
+  }
+  assert.deepEqual(T.SUITS, ['♠', '♥', '♦', '♣']);
+  assert.deepEqual(T.RANKS, ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']);
+  assert.deepEqual(T.HAND_SUIT_ORDER, [3, 2, 0, 1]);
+});
+
+test('invalid hand color orders and rank directions preserve safe default sorting', () => {
+  const hand = [card('10', 1), card('2', 3), card('A', 0), card('Q', 2), card('K', 3), card('2', 1)];
+  const expectedDefault = ['3-K', '3-2', '2-Q', '0-A', '1-10', '1-2'];
+  assert.deepEqual(T.sortHand(hand).map(T.cardKey), expectedDefault);
+  for (const invalid of [null, undefined, [], [0, 1, 2], [0, 1, 2, 2], [0, 1, 2, 4], [0, 1, 2, 3, 4], ['0', 1, 2, 3], [0, 1, 2, undefined], [0, 1, 2, NaN], new Set([0, 1, 2, 3])]) {
+    assert.deepEqual(T.sortHand(hand, invalid).map(T.cardKey), expectedDefault);
+  }
+  for (const direction of [null, undefined, '', 'ascending', 'descending', 'ASC', 1]) {
+    assert.deepEqual(T.sortHand(hand, T.HAND_SUIT_ORDER, direction).map(T.cardKey), expectedDefault);
+  }
+  assert.deepEqual(T.sortHand([], [0, 1, 2, 3], 'asc'), []);
+  assert.deepEqual(T.sortHand(hand, null, 'asc').map(T.cardKey), ['3-2', '3-K', '2-Q', '0-A', '1-2', '1-10']);
+});
+
 test('follow suit when possible, otherwise every card is legal; input hands stay intact', () => {
   const hand = [card('2', 0), card('A', 0), card('K', 1)];
   assert.deepEqual(T.legalCards(hand, [play(3, 'Q', 0)]), hand.slice(0, 2));
