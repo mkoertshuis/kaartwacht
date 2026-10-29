@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c32">
+  <meta name="description" content="Leer kleuren tellen, kaarten onthouden en spelers lezen terwijl je slagen speelt.">
+  <title>Kaartwacht - kaartentellen oefenen</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="training.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Kaartwacht startpagina">
+      <span class="brand-mark" aria-hidden="true">K<span>♠</span></span>
+      <span>kaartwacht</span>
+    </a>
+    <div class="topbar-note"><span class="status-dot"></span> Elke slag telt</div>
+  </header>
+
+  <main class="app-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">TRAININGSTAFEL <span>·</span> SLAGENSPEL · RIKKEN</p>
+        <h1 id="page-title">Hou het spel <em>in de gaten.</em></h1>
+        <p class="intro-copy">Volg de kleuren. Lees de spelers. Onthoud wat er valt.</p>
+      </div>
+      <div class="scoreboard" aria-label="Jouw voortgang">
+        <div><span class="score-number" id="score">0</span><span class="score-label">goed</span></div>
+        <span class="score-divider" aria-hidden="true"></span>
+        <div><span class="score-number" id="streak">0</span><span class="score-label">op rij</span></div>
+      </div>
+    </section>
+
+    <nav class="mode-tabs" aria-label="Kies een oefening">
+      <button type="button" class="mode-tab is-active" data-mode="counts" aria-pressed="true"><span class="tab-index" aria-hidden="true">♣</span><span>Kleuren tellen</span></button>
+      <button type="button" class="mode-tab" data-mode="cards" aria-pressed="false"><span class="tab-index" aria-hidden="true">A♠</span><span>Kaarten onthouden</span></button>
+      <button type="button" class="mode-tab" data-mode="players" aria-pressed="false"><span class="tab-index" aria-hidden="true">⊘</span><span>Spelers volgen</span></button>
+      <button type="button" class="mode-tab" data-mode="rebuild" aria-pressed="false"><span class="tab-index" aria-hidden="true">↶</span><span>Slag terugbouwen</span></button>
+      <button type="button" class="mode-tab" data-mode="table" aria-pressed="false"><span class="tab-index" aria-hidden="true">✳</span><span>Aan tafel</span></button>
+    </nav>
+
+    <section class="practice-settings" aria-label="Stel je oefening in">
+      <div class="settings-main">
+        <label class="setting-field" for="difficulty">Lengte
+          <select id="difficulty">
+            <option value="easy">Rustig · 3 slagen</option>
+            <option value="medium">Vlot · 5 slagen</option>
+            <option value="advanced">Gevorderd · 8 slagen</option>
+            <option value="expert">Uitdagend · 10 slagen</option>
+            <option value="hard">Aan tafel · 13 slagen</option>
+          </select>
+        </label>
+        <label class="setting-field" for="tracked-count">Kleuren volgen
+          <select id="tracked-count">
+            <option value="1">1 kleur</option>
+            <option value="2">2 kleuren</option>
+            <option value="4">4 kleuren</option>
+          </select>
+        </label>
+        <div class="setting-field suit-setting"><span id="focus-label">Jouw kleuren</span><div id="focus-suits" class="focus-suits" role="group" aria-labelledby="focus-label"></div></div>
+      </div>
+      <details class="extra-settings">
+        <summary>Oefenopties <span aria-hidden="true">⌄</span></summary>
+        <div class="settings-extra">
+          <div id="card-settings" class="settings-group" hidden>
+            <label class="setting-field" for="card-style">Kaartvragen
+              <select id="card-style"><option value="recognize">Herkennen · ja / nee</option><option value="select">Zelf selecteren</option></select>
+            </label>
+            <label class="setting-field" for="rank-range">Kaarten
+              <select id="rank-range"><option value="high">A · K · Q · J</option><option value="all">Alle rangen</option></select>
+            </label>
+          </div>
+          <div id="scope-settings" class="settings-group">
+            <label class="setting-field" for="count-scope">Wat telt mee?
+              <select id="count-scope"><option value="all">Alle handen · ook jouw hand</option><option value="others">Alleen de andere spelers</option></select>
+            </label>
+          </div>
+          <label class="setting-field" for="pace">Speeltempo
+            <select id="pace"><option value="slow">Rustig</option><option value="normal" selected>Normaal</option><option value="fast">Snel</option></select>
+          </label>
+          <label class="help-setting" for="help-toggle"><input type="checkbox" id="help-toggle"><span>Tellijst als hulp<small>Verdwijnt tijdens de vragen</small></span></label>
+        </div>
+      </details>
+      <p class="settings-note">Een instelling wijzigen start een nieuwe hand. Bij twee kleuren vervangt een nieuwe kleur je oudste keuze.</p>
+    </section>
+
+    <section class="training-layout" aria-label="Kaarttel-oefening">
+      <div class="table-panel">
+        <div class="table-heading">
+          <div>
+            <p class="section-kicker" id="round-label">TELOPDRACHT</p>
+            <h2 id="round-title">Onthoud wat er valt.</h2>
+          </div>
+        </div>
+        <div class="round-meta">
+          <span id="scenario"></span>
+          <span class="live-tag"><span aria-hidden="true"></span> TRAINING</span>
+        </div>
+        <div class="played-cards" id="played-cards" aria-label="Kaarten op tafel"></div>
+        <div class="learning-aid" id="learning-aid" aria-label="Tellijst als oefenhulp" hidden></div>
+        <div class="hand-area"><span class="hand-label">JOUW HAND <span aria-hidden="true">·</span> ♣ ♦ ♠ ♥</span><div id="hand" class="hand" aria-label="Jouw kaarten"></div></div>
+        <div class="sequence-note"><span class="sequence-line" aria-hidden="true"></span><span id="sequence-count">0 slagen</span><span class="sequence-line" aria-hidden="true"></span></div>
+
+        <section class="answer-area" id="answer-area" aria-labelledby="question-title" hidden>
+          <div class="answer-title"><span class="step-dot" aria-hidden="true">?</span><div><h3 id="question-title" tabindex="-1"></h3><p id="question-help"></p></div></div>
+          <div id="question-controls"></div>
+        </section>
+        <div class="feedback" id="feedback" role="status" aria-live="polite" hidden></div>
+        <div class="history-review" id="history-review" aria-label="Terugblik op de slagen" hidden></div>
+        <section class="session-summary" id="summary" aria-label="Resultaat van je oefening" hidden>
+          <h3>Oefening afgerond</h3><div id="session-summary"></div>
+        </section>
+        <div class="table-footer">
+          <span class="keyboard-hint" id="keyboard-hint" role="status">Lees je opdracht en start het spel.</span>
+          <div class="footer-actions">
+            <button class="secondary-button" id="review-button" type="button" hidden>↶ Bekijk slag</button>
+            <button class="primary-button" id="check-button" type="button">▶ Start</button>
+            <button class="primary-button next-button" id="next-button" type="button" hidden>Verder →</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="aside-heading"><span class="aside-icon" aria-hidden="true">✳</span><span>JOUW OPDRACHT</span></div>
+        <h2 id="focus-title">Kleuren tellen</h2>
+        <p id="focus-copy">Onthoud hoeveel kaarten van jouw kleuren al gespeeld zijn. Tussen de slagen door krijg je vragen.</p>
+        <div class="focus-divider"></div>
+        <div class="progress-heading"><span>Je beste reeks</span><span id="best-score">0</span></div>
+        <div class="progress-track"><span id="progress-fill"></span></div>
+        <p class="progress-caption" id="progress-caption">Elke goede telling houdt je reeks in stand.</p>
+        <div class="skill-progress" id="skill-progress" aria-label="Voortgang per vaardigheid"></div>
+        <div class="aside-tip"><span aria-hidden="true">♧</span><p>Kleur bekennen is verplicht. Hoogste kaart wint; troef gaat boven de uitgekomen kleur. De winnaar komt uit.</p></div>
+      </aside>
+    </section>
+
+    <footer class="page-footer"><span>KAARTWACHT <span>·</span> ELKE SLAG TELT</span><span>Voortgang blijft op dit apparaat bewaard</span></footer>
+  </main>
+</body>
+</html>
